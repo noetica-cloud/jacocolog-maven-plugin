@@ -32,8 +32,8 @@ import javax.inject.Inject;
  * Goal which reads the JaCoCo report and logs coverage.
  */
 @Mojo(name = "coverage", defaultPhase = LifecyclePhase.VERIFY, threadSafe = true, aggregator = true)
-public class JacocoLogMojo
-        extends AbstractMojo {
+public class CoverageMojo extends AbstractMojo {
+
     @Parameter(property = "project", readonly = true)
     private MavenProject project;
 

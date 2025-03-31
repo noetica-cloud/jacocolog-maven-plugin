@@ -6,14 +6,11 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collections;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.plugin.testing.resources.TestResources;
-import org.jacoco.core.analysis.ICoverageNode.CounterEntity;
 
 public class JacocoLogMojoTest {
 
@@ -24,7 +21,7 @@ public class JacocoLogMojoTest {
   public TestResources resources = new TestResources();
 
   @Test
-  public void testCoverageLogging() throws Exception {
+  public void test_coverage_logging_on_simple_project() throws Exception {
     // 1. Build the test project to generate jacoco.exec
     File testProjectDir = resources.getBasedir("simple");
     ProcessBuilder builder = new ProcessBuilder("mvn", "clean", "test");
@@ -41,7 +38,7 @@ public class JacocoLogMojoTest {
     System.setOut(new PrintStream(baos));
     
     // 2. Execute your JacocoLogMojo
-    JacocoLogMojo mojo = (JacocoLogMojo) rule.lookupConfiguredMojo(testProjectDir, "coverage");
+    CoverageMojo mojo = (CoverageMojo) rule.lookupConfiguredMojo(testProjectDir, "coverage");
     try {
       mojo.execute();
     } finally {
