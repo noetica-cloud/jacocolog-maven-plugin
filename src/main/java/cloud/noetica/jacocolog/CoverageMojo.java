@@ -17,16 +17,19 @@
 
 package cloud.noetica.jacocolog;
 
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.inject.Inject;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.jacoco.core.analysis.ICoverageNode.CounterEntity;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-
-import java.util.List;
-import javax.inject.Inject;
 
 /**
  * Goal which reads the JaCoCo report and logs coverage.
@@ -34,34 +37,79 @@ import javax.inject.Inject;
 @Mojo(name = "coverage", defaultPhase = LifecyclePhase.VERIFY, threadSafe = true, aggregator = true)
 public class CoverageMojo extends AbstractMojo {
 
-    @Parameter(property = "project", readonly = true)
-    private MavenProject project;
+  @Parameter(property = "project", readonly = true)
+  private MavenProject project;
 
-    /**
-     * Coverage counters to log in Maven Build logs
-     */
-    @Parameter(property = "counters", defaultValue = "CLASS,METHOD,BRANCH,LINE,INSTRUCTION,COMPLEXITY")
-    private List<CounterEntity> counters;
+  /**
+   * Whether the Mojo should
+   */
+  @Parameter(property = "overall")
+  private OverallCoverageConfig overall;
 
-    /**
-     * Coverage counters to log in Maven Build logs
-     */
-    @Parameter(property = "digits", defaultValue = "2")
-    private int digits;
+  /**
+   * Whether the plugin should
+   */
+  @Parameter(property = "includes", defaultValue = "**\\jacoco.exec")
+  private String includes;
 
-    @Inject
-    CountersExtractor extractor;
+  /**
+   * Coverage counters to log in Maven Build logs
+   */
+  @Parameter(property = "counters", defaultValue = "CLASS,METHOD,BRANCH,LINE,INSTRUCTION,COMPLEXITY")
+  private List<CounterEntity> counters;
 
-    @Inject
-    CountersLogger logger;
+  /**
+   * Coverage counters to log in Maven Build logs
+   */
+  @Parameter(property = "digits", defaultValue = "2")
+  private int digits;
 
-    @Override
-    public void execute() throws MojoExecutionException {
-        logger.setDigits(digits);
-        logger.setCounters(counters.toArray(new CounterEntity[counters.size()]));
-        JacocoCounters report = extractor.extract(project);
-        if (report != null) {
-            logger.log(report);
-        }
+  @Inject
+  private CoverageAggregatorLifecycleParticipant hook;
+
+  @Override
+  public void execute() throws MojoExecutionException {
+    CountersLogger logger = new CountersLogger(
+        getLog(),
+        digits,
+        new LinkedHashSet<>(counters));
+
+    if (project.isExecutionRoot() && this.overall.isEnable()) {
+      hook.enable();
+      hook.setLog(getLog());
+      hook.setIncludes(this.overall.getIncludes());
+      hook.setLogger(logger);
     }
+
+    CountersExtractor extractor = new CountersExtractor(getLog());
+    JacocoCounters report = extractor.extract(project);
+    if (report != null) {
+      hook.record(project.getName(), report);
+      logger.log(report);
+    }
+  }
+
+  public static class OverallCoverageConfig {
+    private boolean enable;
+    private Set<String> includes = new LinkedHashSet<>();
+
+    public OverallCoverageConfig() {
+    }
+
+    public boolean isEnable() {
+      return enable;
+    }
+
+    public void setEnable(boolean enable) {
+      this.enable = enable;
+    }
+
+    public Set<String> getIncludes() {
+      return includes;
+    }
+
+    public void setIncludes(Set<String> includes) {
+      this.includes = includes;
+    }
+  }
 }

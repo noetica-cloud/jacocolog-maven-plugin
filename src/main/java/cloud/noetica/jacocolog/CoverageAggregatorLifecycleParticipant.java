@@ -17,6 +17,11 @@
 
 package cloud.noetica.jacocolog;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -24,22 +29,89 @@ import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugin.logging.SystemStreamLog;
 
 @Named
 @Singleton
 public class CoverageAggregatorLifecycleParticipant extends AbstractMavenLifecycleParticipant {
-    private final Log log = new SystemStreamLog();
+
+    private Map<String, JacocoCounters> reports = new HashMap<>();
+
+    private Log log;
+
+    private CountersLogger logger;
+
+    /**
+     * Whether the plugin should log overall coverage at the end
+     */
+    private boolean enable = false;
+
+    /**
+     * What projects to include in overall coverage report
+     */
+    private Set<String> includes;
+
+    public void setLog(Log log) {
+        this.log = log;
+    }
+
+    public void setLogger(CountersLogger logger) {
+        this.logger = logger;
+    }
+
+    public void enable() {
+        this.enable = true;
+    }
+
+    public void setIncludes(Set<String> includes) {
+        this.includes = includes;
+    }
+
+    /**
+     * Record Maven project report for overall coverage logging
+     * 
+     * @param projectName - Maven project name
+     * @param report      - project's computed coverage report
+     */
+    public void record(String projectName, JacocoCounters report) {
+        this.reports.put(projectName, report);
+    }
 
     @Override
-    public void afterProjectsRead(MavenSession session) throws MavenExecutionException {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            log.info("[TEST-HOOK] Shutdown hook triggered: Build completed.");
-            try {
-                log.info("[TEST-HOOK] Coverage aggregation completed successfully.");
-            } catch (Exception e) {
-                log.info("[TEST-HOOK] Error during coverage aggregation: " + e.getMessage());
-            }
-        }));
+    public void afterSessionEnd(MavenSession session) throws MavenExecutionException {
+        if (!enable) {
+            return;
+        }
+
+        this.log.info("--- Overall coverage ---");
+
+        if (reports.size() <= 0) {
+            this.log.info("No reports to aggregate");
+            return;
+        }
+
+        final Set<String> projects;
+        if (includes != null && !includes.isEmpty()) {
+            projects = reports
+                    .keySet()
+                    .stream()
+                    .filter(p -> includes.contains(p))
+                    .collect(Collectors.toSet());
+        } else {
+            projects = reports.keySet();
+        }
+
+        // Check ignored projects
+        includes
+                .stream()
+                .filter(name -> !projects.contains(name))
+                .forEach(projectName -> this.log
+                        .warn(
+                                "Project \"" +
+                                        projectName +
+                                        "\" not found in current build session"));
+
+        projects.stream().map(p -> reports.get(p)).reduce((JacocoCounters a, JacocoCounters b) -> a.merge(b))
+                .ifPresent(report -> logger.log(report));
+        reports.clear();
     }
 }

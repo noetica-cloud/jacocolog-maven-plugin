@@ -100,6 +100,7 @@
       <groupId>org.jacoco</groupId>
       <artifactId>org.jacoco.core</artifactId>
       <version>${jacoco.version}</version>
+      <scope>compile</scope>
     </dependency>
 
     <!-- File management tooling -->
@@ -263,23 +264,23 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.3.0</version>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.1.0</version>
         <executions>
           <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
+            <id>assert-coverage-in-logs</id>
+            <phase>verify</phase>
             <configuration>
-              <relocations>
-                <relocation>
-                  <pattern>org.jacoco</pattern>
-                  <shadedPattern>cloud.noetica.jacocolog.jacoco</shadedPattern>
-                </relocation>
-              </relocations>
-              <minimizeJar>true</minimizeJar>
+              <target>
+                <exec executable="bash" failonerror="true">
+                  <arg value="${project.basedir}/src/test/resources/check-coverage.sh" />
+                  <arg value="${project.basedir}/target/it" />
+                </exec>
+              </target>
             </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
