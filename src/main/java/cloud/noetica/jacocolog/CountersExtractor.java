@@ -17,9 +17,11 @@ import org.jacoco.core.tools.ExecFileLoader;
 public class CountersExtractor {
 
     private final Log log;
+    private final String includes;
 
-    public CountersExtractor(Log log) {
+    public CountersExtractor(Log log, String includes) {
         this.log = log;
+        this.includes = includes;
     }
 
     JacocoCounters extract(MavenProject project) {
@@ -28,7 +30,7 @@ public class CountersExtractor {
             return null;
         }
         DirectoryScanner ds = new DirectoryScanner();
-        String[] includes = { "**\\*.exec" };
+        String[] includes = { this.includes };
         ds.setIncludes(includes);
         ds.setBasedir(project.getBuild().getDirectory());
         ds.scan();

@@ -35,14 +35,15 @@ for PROJECT_PATH in "$LOG_DIR"/*; do
     grep -n "Test Coverage:" $LOG | cut -d: -f1 | while read -r LINE; do
         # Extract the correct set of coverage values
         RATIOS=( ${MODULE_COVERAGE[$ITER]} )
+
         LINE=$LINE+1
         for INDEX in "${!ORDER[@]}"; do
             METRIC="${ORDER[$INDEX]}"
             METRIC_KEY="${ORDER_KEYS[$INDEX]}"
 
             EXPECTED="${RATIOS[$INDEX]}"
-
-            RESULT=$(sed -n "${LINE_NUM}p" "$LOG" | grep "$METRIC" | head -n 1)
+            LINE_NUM=$(( LINE + INDEX ))
+            RESULT=$(sed -n "${LINE_NUM}p" "$LOG" | grep "$METRIC")
             if [ -z "$RESULT" ]; then
                 echo "❌ Missing $METRIC in $LOG for module $PROJECT_NAME" && exit 1
             fi
@@ -56,6 +57,8 @@ for PROJECT_PATH in "$LOG_DIR"/*; do
                 echo "❌ $METRIC value in $PROJECT_NAME ($VALUE), expected $EXPECTED" && exit 1
             fi
         done
+
+        ITER=$ITER+1
     done
 
     echo "✅ $PROJECT_NAME coverage check passed!"

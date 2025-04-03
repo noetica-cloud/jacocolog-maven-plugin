@@ -81,7 +81,7 @@ public class CoverageMojo extends AbstractMojo {
       hook.setLogger(logger);
     }
 
-    CountersExtractor extractor = new CountersExtractor(getLog());
+    CountersExtractor extractor = new CountersExtractor(getLog(), includes);
     JacocoCounters report = extractor.extract(project);
     if (report != null) {
       hook.record(project.getName(), report);

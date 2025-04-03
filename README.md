@@ -17,6 +17,8 @@ Test Coverage:
     - Complexity Coverage: 90.2%
 ```
 
+Note: a coverage ratio can be "unknown" if there is no elements to cover (lines, classes, branches...)
+
 #### Prerequisites
 
 - Maven 3.8 or newer
@@ -40,6 +42,26 @@ so you can just use it in your build like so:
 ```
 
 ## Details
+
+### Configuration
+
+The following represents configurable properties its default values:
+```xml
+<configuration>
+  <overall>
+    <!-- Log an overall coverage at the end of Maven session -->
+    <enable>false</enable>
+    <!-- Projects to includes (if none, then all reports will be used) -->
+    <includes></includes>
+  </overall>
+  <!-- Jacoco execution files to include (project's related path regex) -->
+  <includes>**/jacoco.exec</includes>
+  <!-- Ratio's precision (greater than or equals to 0) -->
+  <digits>2</digits>
+  <!-- Counters to display -->
+  <counters>CLASS,METHOD,BRANCH,LINE,INSTRUCTION,COMPLEXITY</counters>
+</configuration>
+```
 
 ### Integration with GitLab CI
 
