@@ -28,7 +28,7 @@
   <name>JaCoCoLog :: Maven Plugin</name>
   <description>The JaCoCoLog Maven Plugin provides the coverage goal to aggregate reports and log coverage probes.</description>
   <url>https://github.com/noetica-cloud/jacocolog-maven-plugin</url>
-  
+
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
@@ -100,6 +100,7 @@
       <groupId>org.jacoco</groupId>
       <artifactId>org.jacoco.core</artifactId>
       <version>${jacoco.version}</version>
+      <scope>compile</scope>
     </dependency>
 
     <!-- File management tooling -->
@@ -132,6 +133,12 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
       <version>1.7.36</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.shared</groupId>
+      <artifactId>maven-verifier</artifactId>
+      <version>1.8.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -231,43 +238,62 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-invoker-plugin</artifactId>
         <version>3.6.0</version>
+        <configuration>
+          <projectsDirectory>${basedir}/src/test/integration</projectsDirectory>
+          <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
+          <cloneClean>true</cloneClean>
+          <pomIncludes>
+            <pomInclude>*/pom.xml</pomInclude>
+          </pomIncludes>
+          <addTestClassPath>true</addTestClassPath>
+          <postBuildHookScript>verify</postBuildHookScript>
+          <goals>
+            <goal>clean</goal>
+            <goal>verify</goal>
+          </goals>
+        </configuration>
         <executions>
           <execution>
-            <id>run-test-project</id>
+            <id>integration-test</id>
             <goals>
+              <goal>install</goal>
               <goal>run</goal>
             </goals>
-            <configuration>
-              <projectsDirectory>src/test/projects</projectsDirectory>
-              <pomIncludes>
-                <pomInclude>simple/pom.xml</pomInclude>
-              </pomIncludes>
-              <goals>
-                <goal>verify</goal>
-              </goals>
-            </configuration>
           </execution>
         </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.3.0</version>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.1.0</version>
         <executions>
           <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
+            <id>assert-coverage-in-logs</id>
+            <phase>verify</phase>
             <configuration>
-              <relocations>
-                <relocation>
-                  <pattern>org.jacoco</pattern>
-                  <shadedPattern>cloud.noetica.jacocolog.jacoco</shadedPattern>
-                </relocation>
-              </relocations>
-              <minimizeJar>true</minimizeJar>
+              <target>
+                <exec executable="bash" failonerror="true">
+                  <arg value="${project.basedir}/src/test/resources/check-coverage.sh" />
+                  <arg value="${project.basedir}/target/it" />
+                </exec>
+              </target>
             </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.sisu</groupId>
+        <artifactId>sisu-maven-plugin</artifactId>
+        <version>0.3.5</version>
+        <executions>
+          <execution>
+            <id>generate-index</id>
+            <goals>
+              <goal>main-index</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>

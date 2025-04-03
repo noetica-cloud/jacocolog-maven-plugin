@@ -17,14 +17,16 @@
 
 package cloud.noetica.jacocolog;
 
+import java.util.Arrays;
 import java.util.EnumMap;
 import org.jacoco.core.analysis.IBundleCoverage;
 import org.jacoco.core.analysis.ICounter;
 import org.jacoco.core.analysis.ICoverageNode.CounterEntity;
+import org.jacoco.core.internal.analysis.CounterImpl;
 
 public class JacocoCounters {
 
-    private EnumMap<CounterEntity, Double> counters = new EnumMap<CounterEntity, Double>(CounterEntity.class);
+    private EnumMap<CounterEntity, ICounter> counters = new EnumMap<CounterEntity, ICounter>(CounterEntity.class);
 
     private JacocoCounters() {
     }
@@ -32,24 +34,39 @@ public class JacocoCounters {
     public static JacocoCounters of(IBundleCoverage bundle) {
         // Extract counters
         JacocoCounters counters = new JacocoCounters();
-        counters.counters.put(CounterEntity.CLASS, build(bundle.getInstructionCounter()));
-        counters.counters.put(CounterEntity.METHOD, build(bundle.getMethodCounter()));
-        counters.counters.put(CounterEntity.BRANCH, build(bundle.getBranchCounter()));
-        counters.counters.put(CounterEntity.LINE, build(bundle.getLineCounter()));
-        counters.counters.put(CounterEntity.INSTRUCTION, build(bundle.getInstructionCounter()));
-        counters.counters.put(CounterEntity.COMPLEXITY, build(bundle.getComplexityCounter()));
+        counters.counters.put(CounterEntity.CLASS, bundle.getInstructionCounter());
+        counters.counters.put(CounterEntity.METHOD, bundle.getMethodCounter());
+        counters.counters.put(CounterEntity.BRANCH, bundle.getBranchCounter());
+        counters.counters.put(CounterEntity.LINE, bundle.getLineCounter());
+        counters.counters.put(
+                CounterEntity.INSTRUCTION,
+                bundle.getInstructionCounter());
+        counters.counters.put(
+                CounterEntity.COMPLEXITY,
+                bundle.getComplexityCounter());
         return counters;
     }
 
-    private static Double build(ICounter counter) {
-        // prevent not a number issue
-        if (counter.getTotalCount() <= 0) {
-            return 0.0;
-        }
-        return counter.getCoveredRatio() * 100;
+    public EnumMap<CounterEntity, ICounter> getCounters() {
+        return counters;
     }
 
-    public EnumMap<CounterEntity, Double> getCounters() {
-        return counters;
+    public JacocoCounters merge(JacocoCounters other) {
+        Arrays.stream(CounterEntity.values())
+                .forEach(e -> this.counters.merge(e, other.getCounters().get(e), (ICounter base, ICounter incoming) -> {
+                    if (base == null) {
+                        return incoming;
+                    }
+                    if (incoming == null) {
+                        return base;
+                    }
+
+                    int mergedMissed = base.getMissedCount() + incoming.getMissedCount();
+                    int mergedCovered = base.getCoveredCount() + incoming.getCoveredCount();
+
+                    // Create a new CounterImpl instance with the summed values.
+                    return CounterImpl.getInstance(mergedMissed, mergedCovered);
+                }));
+        return this;
     }
 }

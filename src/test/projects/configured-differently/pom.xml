@@ -43,6 +43,14 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>cloud.noetica.jacocolog</groupId>
+        <artifactId>jacocolog-maven-plugin</artifactId>
+        <configuration>
+          <counters>CLASS,COMPLEXITY,INSTRUCTION</counters>
+          <digits>1</digits>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>

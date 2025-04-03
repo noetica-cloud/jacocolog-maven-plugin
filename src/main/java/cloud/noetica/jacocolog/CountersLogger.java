@@ -1,47 +1,48 @@
 package cloud.noetica.jacocolog;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.util.Locale;
-
-import javax.inject.Named;
-import javax.inject.Singleton;
+import java.util.Optional;
+import java.util.Set;
 
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugin.logging.SystemStreamLog;
+import org.jacoco.core.analysis.ICounter;
 import org.jacoco.core.analysis.ICoverageNode.CounterEntity;
 
-@Named
-@Singleton
 public class CountersLogger {
 
-    private final Log log = new SystemStreamLog();
+    private static final NumberFormat NUMBER_FORMAT_LOCALE = NumberFormat.getInstance(Locale.getDefault());
 
-    private int digits = 2;
+    private final Log log;
 
-    private static final DecimalFormatSymbols NUMBER_FORMAT_LOCALE = new DecimalFormatSymbols(Locale.ENGLISH);
+    private final int digits;
 
-    private CounterEntity[] counters = CounterEntity.values();
+    private final Set<CounterEntity> counters;
 
-    public void setCounters(CounterEntity[] counters) {
-        this.counters = counters;
-    }
-
-    public void setDigits(int digits) {
+    public CountersLogger(Log log, int digits, Set<CounterEntity> counters) {
+        this.log = log;
         this.digits = digits;
+        this.counters = counters;
     }
 
     public void log(JacocoCounters coverage) {
         log.info("Test Coverage:");
         for (CounterEntity type : counters) {
-            log.info("    - " + toCounterString(type) + " Coverage: "
-                    + formatNumber(coverage.getCounters().get(type)) + "%");
+            ICounter counter = coverage.getCounters().get(type);
+            String value = Optional.of(counter)
+                    .filter(c -> c.getTotalCount() > 0)
+                    .map(c -> format(c.getCoveredRatio()) + "%")
+                    .orElse("unknown");
+            log.info("    - " + toCounterString(type) + " Coverage: " + value);
+            log.debug("     Covered : " + counter.getCoveredCount() + ", Total : " + counter.getTotalCount());
         }
     }
-    
-    private String formatNumber(final double value) {
-        String format = "#" + (digits == 0 ? "" : ".") + new String(new char[digits]).replace("\0", "#");
-        return new DecimalFormat(format, NUMBER_FORMAT_LOCALE).format(value);
+
+    private String format(final double value) {
+        return NUMBER_FORMAT_LOCALE.format(
+                BigDecimal.valueOf(value * 100).setScale(digits, RoundingMode.FLOOR));
     }
 
     private String toCounterString(CounterEntity counter) {

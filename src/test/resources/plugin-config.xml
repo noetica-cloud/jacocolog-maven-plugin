@@ -1,0 +1,4 @@
+<configuration>
+    <counters>CLASS,COMPLEXITY,INSTRUCTION</counters>
+    <digits>1</digits>
+</configuration>
