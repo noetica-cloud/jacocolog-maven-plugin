@@ -37,7 +37,7 @@ so you can just use it in your build like so:
 <plugin>
   <groupId>cloud.noetica.jacocolog</groupId>
   <artifactId>jacocolog-maven-plugin</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.0</version>
 </plugin>
 ```
 
