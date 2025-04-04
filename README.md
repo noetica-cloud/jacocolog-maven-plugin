@@ -1,3 +1,5 @@
+![jacocolog banner](https://github.com/user-attachments/assets/eb7684e2-4314-4cca-b97c-fd9c47b4e2e6)
+
 # JaCoCoLog
 
 Inspired from [JaCoCo Gradle Plugin](https://gitlab.com/barfuin/gradle-jacoco-log).  
