@@ -38,6 +38,8 @@ so you can just use it in your build like so:
   <groupId>cloud.noetica.jacocolog</groupId>
   <artifactId>jacocolog-maven-plugin</artifactId>
   <version>1.0.0</version>
+  <!-- Important to add if you want to enable overall coverage logging -->
+  <extensions>true</extensions>
 </plugin>
 ```
 
