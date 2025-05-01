@@ -62,7 +62,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven-plugin-tools.version>3.15.1</maven-plugin-tools.version>
     <jacoco.version>0.8.13</jacoco.version>
-    <maven-shared.version>3.1.0</maven-shared.version>
+    <maven-shared.version>3.2.0</maven-shared.version>
     <junit.version>4.13.2</junit.version>
     <maven-plugin-testing-harness.version>3.3.0</maven-plugin-testing-harness.version>
   </properties>
