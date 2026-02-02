@@ -64,7 +64,7 @@
     <jacoco.version>0.8.14</jacoco.version>
     <maven-shared.version>3.2.0</maven-shared.version>
     <junit.version>4.13.2</junit.version>
-    <maven-plugin-testing-harness.version>3.3.0</maven-plugin-testing-harness.version>
+    <maven-plugin-testing-harness.version>3.5.0</maven-plugin-testing-harness.version>
   </properties>
 
   <dependencies>
