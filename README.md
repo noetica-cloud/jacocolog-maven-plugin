@@ -23,7 +23,7 @@ Note: a coverage ratio can be "unknown" if there is no elements to cover (lines,
 
 #### Prerequisites
 
-- Maven 3.8 or newer
+- Maven 3.9 or newer
 - Java 8 or newer
 
 &nbsp;
